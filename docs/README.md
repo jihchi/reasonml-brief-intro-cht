@@ -23,7 +23,7 @@ Web Application 開發可以從 BuckleScript 所提供的 API 找起，例如 [J
 
 > 💡 API 文件有 index of values（[BuckleScript](https://bucklescript.github.io/bucklescript/api/index_values.html)、[ReasonML](https://reasonml.github.io/api/index_values.html)）可以列出所有支援的 functions，開啟頁面使用 Browser 內建搜尋字串快速尋找。
 >
-> ![index of values - ReasonML](./index_of_values_re.jpg)
+> ![index of values - ReasonML](./assets/index_of_values_re.jpg)
  
 ## 如何撰寫 BuckleScript bindings？
 
