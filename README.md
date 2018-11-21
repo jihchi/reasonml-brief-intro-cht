@@ -64,6 +64,22 @@ JS Output:
 Math.random()
 ```
 
+### 模擬 JS 的 "new" 關鍵字
+
+使用 `[@bs.new]` 模擬 JS 的 `new`，詳細可參考 https://bucklescript.github.io/docs/en/class#new
+
+Binding:
+```re
+type t;
+[@bs.new] external createDate : unit => t = "Date";
+let mydate = createDate();
+```
+
+JS Output:
+```js
+var mydate = new Date();
+```
+
 ## Topics TBD
 
 - Write unit test for component created by ReasonReact
