@@ -36,15 +36,32 @@ Web Application 開發可以從 BuckleScript 所提供的 API 找起，例如 [J
 詳細可參考 https://bucklescript.github.io/docs/en/bind-to-global-values
 
 Binding:
-
 ```re
 [@bs.val] [@bs.scope ("location")] external href : string = "href";
 ```
 
-JS Output:
+*Shorten version*:
+```re
+[@bs.val] [@bs.scope ("location")] external href : string = "";
+```
 
+JS Output:
 ```js
 location.href
+```
+
+### Global modules
+
+詳細可參考 https://bucklescript.github.io/docs/en/bind-to-global-values#global-modules
+
+Binding:
+```re
+[@bs.val] [@bs.scope ("Math")] external random : unit => float = "random";
+```
+
+JS Output:
+```js
+Math.random()
 ```
 
 ## Topics TBD
