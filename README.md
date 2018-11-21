@@ -44,7 +44,7 @@ Binding:
 JS Output:
 
 ```js
-window.location.href
+location.href
 ```
 
 ## Topics TBD
