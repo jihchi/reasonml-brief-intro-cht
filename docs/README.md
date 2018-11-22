@@ -100,6 +100,51 @@ Js.log(createMyModule());
 */
 ```
 
+### 外部函式 e.g. `MyFunc(100)`
+
+詳細請參考：https://bucklescript.github.io/docs/en/import-export#import-a-default-value
+
+```reason
+[@bs.module] external myFunc : int => int = "MyFunc";
+
+Js.log(myFunc(100));
+/* 
+   輸出：
+   var MyFunc = require("MyFunc");
+   console.log(MyFunc(100));
+*/
+```
+
+### 外部方法 e.g. `path.dirname("...")`
+
+詳細請參考：https://bucklescript.github.io/docs/en/import-export#import
+
+```reason
+[@bs.module "path"] external dirname : string => string = "dirname";
+
+Js.log(dirname("/foo/bar/baz/"));
+/* 
+   輸出：
+   var path = require("path");
+   console.log(path.dirname("/foo/bar/baz/"));
+*/
+```
+
+### ES6 模組 e.g. `import es from 'es'`
+
+詳細請參考：https://bucklescript.github.io/docs/en/import-export#import-a-default-value
+
+```reason
+[@bs.module "MyFuncES"] external myFuncES : int => int = "default";
+
+Js.log(myFuncES(100));
+/* 
+   輸出：
+   var MyFuncES = require("MyFuncES");
+   console.log(MyFuncES.default(100));
+*/
+```
+
 ## Topics TBD
 
 - Write unit test for component created by ReasonReact
