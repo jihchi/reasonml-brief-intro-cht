@@ -145,10 +145,17 @@ Js.log(myFuncES(100));
 */
 ```
 
+## ReasonML 如何測試撰寫 React Component？
+
+## 推薦 React Development 好用的函式庫 / ppx 
+
+### `bs-json`: JSON marshal / unmarshal 
+
+### `bs-jest`
+
+### `graphql_ppx`
+
 ## Topics TBD
 
-- Write unit test for component created by ReasonReact
 - What’s ‘a, ‘b, etc. meaning on function signature? It’s difficult to understand API document.
-- What’s .rmi extension? (ReasonML FAQ has answered)
-- 有什麼好用的常用的 library, bs-json, graphQL ppx...
 
