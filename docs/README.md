@@ -145,17 +145,126 @@ Js.log(myFuncES(100));
 */
 ```
 
-## ReasonML 如何測試撰寫 React Component？
+## ReasonML 如何撰寫 React Component 測試？
+
 
 ## 推薦 React Development 好用的函式庫 / ppx 
 
-### `bs-json`: JSON marshal / unmarshal 
+### `glennsl/bs-json`: JSON encode / decode 函式庫
 
-### `bs-jest`
+* 官方網址：https://github.com/glennsl/bs-json
 
-### `graphql_ppx`
+### `glennsl/bs-jest`: Jest 的 BuckleScript bindings
 
-## Topics TBD
+[Jest](https://jestjs.io/) 是一套 JavaScript 的測試 runner，可以用來撰寫 unit / integration test，另外內建包含 coverage、assertions、mocks 及 snapshots 等功能，API 支援十分完善且有極佳的開發體驗。
+
+![Jest Running Screenshot](./assets/jest.png)
+
+（圖片來源：https://jestjs.io/en/ ）
+
+[bs-jest](https://github.com/glennsl/bs-jest) 為 Jest 在 BuckleScript 的 Binding，由 [glennsl](https://github.com/glennsl/) 所撰寫開發。這個 Binding 支援大部份的 Jest API。使用 ReasonML 開發 Web Development 經常使用 "record type" 或 "variant type" 等，若使用 JavaScript 撰寫測試程式碼，會需要用到許多 JS 與 ReasonML 之間的轉換，徒增不少開發困擾，因此建議使用 `bs-jest` 配上 Jest 撰寫測試。
+
+例如，撰寫 `getPersonName` 的單元測試：
+
+```reason
+/* Person.re */
+type person = {
+  firstName: string,
+  lastName: string,
+};
+
+type field =
+  | First
+  | Last;
+
+let getPersonName = (targetField: field, data: person): string =>
+  switch (targetField) {
+  | First => data.firstName
+  | Last => data.lastName
+  };
+```
+
+若要使用 JavaScript 撰寫測試，需要特別使用的 `bs` attribute，才能在 JavaScript 中使用：
+
+1. `type person` 上方加入 `[@bs.deriving jsConverter]` (詳細參考 [jsConverter](https://bucklescript.github.io/docs/en/generate-converters-accessors#convert-between-jst-object-and-record))
+2. `type field` 上方加入 `[@bs.deriving accessors]` (詳細參考 [accessors](https://bucklescript.github.io/docs/en/generate-converters-accessors#functions-plain-values-for-variant))
+
+加入後結果如下：
+
+```reason
+/* Person.re（給 JavaScript 撰寫測試的版本） */
+[@bs.deriving jsConverter]
+type person = {
+  firstName: string,
+  lastName: string,
+};
+
+[@bs.deriving accessors]
+type field =
+  | First
+  | Last;
+
+/* ...下略... */
+```
+
+使用 JavaScript 撰寫的測試如下（假設 ReasonML 編譯後檔名為 `Person.bs.js`）：
+
+```javascript
+/* person_test.js */
+const person = require('./Person.bs');
+
+test('getPersonName, field = firstName', () => {
+  // 使用 jsConverter 將 Plain Object 轉成 ReasonML record
+  const data = person.personFromJs({ firstName: 'Archie', lastName: 'Lee' });
+  // 使用 accessors 取得特定的 ReasonML variant type
+  const field = person.first;
+  // 最後，才是實際調用函式並帶入參數
+  const actual = person.getPersonName(field, data);
+
+  expect(actual).toEqual('Archie');
+});
+```
+
+流程順序如下：
+
+```mermaid
+graph LR;
+    RE["<center>Person.re</center>"] --> |Compile to| BSJS["<center>Person.bs.js</center>"];
+    BSJS --> |Import by| JS["<center>Person.test.js</center>"];
+    JS --> |Execute by| Jest;
+```
+
+---
+
+若是直接使用 ReasonML 撰寫測試，不需要額外 `bs` attribute，測試的程式碼也較精簡直覺：
+
+```reason
+/* Person_test.re */
+open Jest;
+open Expect;
+
+test("getPersonName, field = firstName", () => {
+  let data = Person.{ firstName: "Archie", lastName: "Lee" };
+  let field = Person.First;
+  let actual = Person.getPersonName(field, data);
+
+  actual |> expect |> toEqual("Archie");
+});
+```
+
+流程簡化許多：
+
+```mermaid
+graph LR;
+    RE["<center>Person_test.re</center>"] --> |Compile to| BSJS["<center>Person_test.bs.js</center>"];
+    BSJS --> |Execute by| Jest;
+```
+
+### `mhallin/graphql_ppx`: BuckleScript / ReasonML 的 GraphQL 語法擴充 
+
+* 官方網址：https://github.com/mhallin/graphql_ppx
+
+## FAQ
 
 - What’s ‘a, ‘b, etc. meaning on function signature? It’s difficult to understand API document.
 
