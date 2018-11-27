@@ -150,9 +150,125 @@ Js.log(myFuncES(100));
 
 ## 推薦 React Development 好用的函式庫 / ppx 
 
-### `glennsl/bs-json`: JSON encode / decode 函式庫
+### `glennsl/bs-json`: JSON Encode / Decode 函式庫
 
 * 官方網址：https://github.com/glennsl/bs-json
+
+現今 Web Development 幾乎都會需要面對 JSON 的處理，ReasonML / BuckleScript 也有幾種方式可以處理。
+
+#### 仿真 `JSON.parse` / `JSON.stringify`
+
+!> 不推薦，最後採用的方法。
+
+使用 `[@bs.deriving abstract]` 來仿真 JavaScript 的 `JSON.parse`。
+
+以下 `JSON.parse` 擷取自 [JSON](https://bucklescript.github.io/docs/en/json) 章節：
+
+```reason
+[@bs.deriving abstract]
+type data = {name: string};
+
+[@bs.scope "JSON"] [@bs.val]
+external parseIntoMyData : string => data = "parse";
+
+let result = parseIntoMyData("{\"name\": \"Luke\"}");
+let n = result->name;
+```
+
+產生結果：
+
+```javascript
+var result = JSON.parse("{\"name\": \"Luke\"}");
+var n = result.name;
+```
+
+?> `JSON.stringify` 請參考 `Js.Json` 的 stringify。
+
+#### `Js.Json`
+
+`Js.Json` 模組為 BuckleScript 內建模組之一，優點可以直接使用，但使用上較為複雜。
+
+以下示範 parse JSON：
+
+```reason
+/* JSON string */
+let data = {|{ "name": "Luke Skywalker" }|};
+
+/* 進行 JSON.parse，若有任何錯誤，丟出例外 */
+let json =
+  try (Js.Json.parseExn(data)) {
+  | exn =>
+    /* 輸出例外並傳回 null */
+    Js.Console.error(exn);
+    Js.Json.null;
+  };
+
+/* 取得 "name" 這個欄位的值 */
+let name: option(string) =
+  switch (Js.Json.classify(json)) {
+  | JSONFalse
+  | JSONTrue
+  | JSONNull
+  | JSONString(_)
+  | JSONNumber(_)
+  | JSONArray(_) => None
+  | JSONObject(dict) =>
+    switch (Js.Dict.get(dict, "name")) {
+    | None => None
+    | Some(string) => Js.Json.decodeString(string)
+    }
+  };
+
+switch (name) {
+| Some(v) => v
+| None => "N/A"
+}
+/* 輸出：Luke Skywalker */
+```
+
+以下示範 **stringify**：
+
+```reason
+/* tuple: (string, Js.Json.t)*/
+let name = ("name", Js.Json.string("Luke Skywalker"));
+let dict = [name] |> Js.Dict.fromList;
+let data = dict |> Js.Json.object_ |> Js.Json.stringify;
+
+Js.log(data);
+/* 輸出：{"name":"Luke Skywalker"} */
+```
+
+#### `bs-json`
+
+?> 推薦使用。
+
+[bs-json](https://github.com/glennsl/bs-json) 由 [glennsl](https://github.com/glennsl/) 所撰寫開發的函式庫。提供更簡潔方便的 Decode / Encode 寫法。
+
+下列示範 JSON parse：
+
+```reason
+/* JSON string */
+let data = {|{ "name": "Luke Skywalker", "height": 172 }|};
+
+/* 對應的 record type */
+type person = {
+  name: string,
+  height: int,
+};
+
+let decoder = json => {
+  open! Json.Decode;
+  {
+    name: json |> field("name", string),
+    height: json |> field("height", int)
+  }
+};
+
+let actual =  data |> Json.parseOrRaise |> decoder;
+
+Js.log(actual.name);
+/* 輸出：Luke Skywalker */
+```
 
 ### `glennsl/bs-jest`: Jest 的 BuckleScript bindings
 
@@ -230,7 +346,7 @@ test('getPersonName, field = firstName', () => {
 ```mermaid
 graph LR;
     RE["<center>Person.re</center>"] --> |Compile to| BSJS["<center>Person.bs.js</center>"];
-    BSJS --> |Import by| JS["<center>Person.test.js</center>"];
+    BSJS --> |Import by| JS["<center>Person_test.js</center>"];
     JS --> |Execute by| Jest;
 ```
 
