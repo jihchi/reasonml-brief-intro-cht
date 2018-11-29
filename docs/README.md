@@ -264,7 +264,7 @@ let decoder = json => {
   }
 };
 
-let actual =  data |> Json.parseOrRaise |> decoder;
+let actual = data |> Json.parseOrRaise |> decoder;
 
 Js.log(actual.name);
 /* 輸出：Luke Skywalker */
@@ -379,6 +379,85 @@ graph LR;
 ### `mhallin/graphql_ppx`: BuckleScript / ReasonML 的 GraphQL 語法擴充 
 
 * 官方網址：https://github.com/mhallin/graphql_ppx
+
+[GraphQL](https://graphql.org/) 是一套 Query Language，除了 REST HTTP API 之外的一種選擇。最單純直接的使用方式，就是送出「字串」組成的 Query，收到 JSON 回應之後，進行 JSON Decode。
+
+以下示範使用星際大戰 GraphQL API，取得角色 "R2-D2" 的資料：
+
+GraphQL API：https://api.graph.cool/simple/v1/swapi
+
+```graphql
+{
+  Person(name: "R2-D2") {
+    id
+    name
+    gender
+    height
+    skinColor
+  }
+}
+```
+
+傳回內容為：
+
+```json
+{
+  "data": {
+    "Person": {
+      "name": "R2-D2",
+      "height": 96,
+      "skinColor": [
+        "WHITE",
+        "BLUE"
+      ],
+      "id": "cj0nv9p9wewcm01302r07xzna",
+      "gender": "UNKNOWN"
+    }
+  }
+}
+```
+
+cURL 範例:
+
+```bash
+curl 'https://api.graph.cool/simple/v1/swapi' \
+  -H 'content-type: application/json' \
+  --data-binary '{ "query":"{ Person(name: \"R2-D2\") { id name gender height skinColor } }" }' 
+```
+
+你也可以透過「[GraphQL 線上遊樂場](https://graphqlbin.com/v2/gZnocG)」試著使用 GraphQL ：
+
+![GraphQL Playground Screenshot](./assets/graphqlbin.png)
+
+下列使用 [bs-fetch](https://github.com/reasonml-community/bs-fetch) 為例，使用 [Fetch API](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API) 發出 GraphQL 請求：
+
+```reason
+let body = {| {
+  Person(name: "R2-D2") {
+    id
+    name
+    gender
+    height
+    skinColor
+  }
+} |};
+
+Fetch.fetchWithInit(
+  "https://api.graph.cool/simple/v1/swapi",
+  Fetch.RequestInit.make(
+    ~method_=Post,
+    ~body=body |> Js.Json.string |> Js.Json.stringify |> Fetch.BodyInit.make,
+    ~headers={"Content-Type": "application/json"} |> Fetch.HeadersInit.make,
+    (),
+  ),
+)
+|> Js.Promise.then_(Fetch.Response.json)
+|> Js.Promise.then_(res => Js.log(res));
+
+/* Console 輸出：
+  {"data":{"Person":{"name":"R2-D2","height":96,"skinColor":["WHITE","BLUE"],"id":"cj0nv9p9wewcm01302r07xzna","gender":"UNKNOWN"}}}
+*/
+```
 
 ## FAQ
 
