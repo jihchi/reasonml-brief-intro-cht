@@ -378,8 +378,6 @@ graph LR;
 
 ### `mhallin/graphql_ppx`: BuckleScript / ReasonML 的 GraphQL 語法擴充 
 
-* 官方網址：https://github.com/mhallin/graphql_ppx
-
 [GraphQL](https://graphql.org/) 是一套 Query Language，除了 REST HTTP API 之外的一種選擇。最單純直接的使用方式，就是送出「字串」組成的 Query，收到 JSON 回應之後，進行 JSON Decode。
 
 以下示範使用星際大戰 GraphQL API，取得角色 "R2-D2" 的資料：
@@ -462,11 +460,16 @@ Fetch.fetchWithInit(
 */
 ```
 
-此時，若要進行 JSON decode，必須自行撰寫 decoder。
+接著，需要將 `Js.Json.t` 的型別進行 JSON decode，自行撰寫 decoder 以便後續使用。每個 Query 都要完成將同的步驟，長時間下來顯得十分費工。
 
-如果採用 [`graphql_ppx`](https://github.com/mhallin/graphql_ppx) 這套語言擴充，配合必要的 GraphQL Schema，大幅提升開發便利性。
+若採用 [`graphql_ppx`](https://github.com/mhallin/graphql_ppx) 語言擴充，加上必要的 GraphQL Schema，便可大幅提升開發體驗，`graphql_ppx` 包含但不限下列功能：
 
-以相同 Query 為例，若是使用 `graphql_ppx`，首先宣告一個新的模組：
+1. Schema 欄位檢查 <br/> ![錯誤拼字檢查](./assets/misspelled_field.gif) <br/> （圖片來源：https://github.com/mhallin/graphql_ppx#examples ）
+2. Variable 型別檢查 <br/> ![遺失欄位檢查](./assets/missing_variables.gif) <br/> （圖片來源：https://github.com/mhallin/graphql_ppx#examples ）
+3. 回傳 Object 剖析轉換成 `Js.t` 型別 <br/> ![欄位檢查](./assets/removed_field.gif) <br/> （圖片來源：https://github.com/mhallin/graphql_ppx#examples ）
+4. Enums 轉換成 Variant 型別
+
+以相同範例為例，使用 `graphql_ppx`，首先宣告一個新的模組：
 
 ```reason
 module PersonQuery = [%graphql {|
