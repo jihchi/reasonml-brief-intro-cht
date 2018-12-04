@@ -452,10 +452,108 @@ Fetch.fetchWithInit(
   ),
 )
 |> Js.Promise.then_(Fetch.Response.json)
-|> Js.Promise.then_(res => Js.log(res));
+|> Js.Promise.then_(res => 
+  /* res 的型別為 Js.Json.t */
+  Js.log(res)
+);
 
 /* Console 輸出：
   {"data":{"Person":{"name":"R2-D2","height":96,"skinColor":["WHITE","BLUE"],"id":"cj0nv9p9wewcm01302r07xzna","gender":"UNKNOWN"}}}
+*/
+```
+
+此時，若要進行 JSON decode，必須自行撰寫 decoder。
+
+如果採用 [`graphql_ppx`](https://github.com/mhallin/graphql_ppx) 這套語言擴充，配合必要的 GraphQL Schema，大幅提升開發便利性。
+
+以相同 Query 為例，若是使用 `graphql_ppx`，首先宣告一個新的模組：
+
+```reason
+module PersonQuery = [%graphql {|
+{
+  Person(name: "R2-D2") {
+    id
+    name
+    gender
+    height
+    skinColor
+  }
+}
+|}];
+```
+
+接著，使用模組開放的 `make` 函式實際建構出 Query，最後搭配 `bs-fetch`：
+
+```reason
+let personQuery = PersonQuery.make();
+
+Fetch.fetchWithInit(
+  "https://api.graph.cool/simple/v1/swapi",
+  Fetch.RequestInit.make(
+    ~method_=Post,
+    ~body=
+      Js.Dict.fromList([
+        ("query", Js.Json.string(personQuery##query)),
+        ("variables", personQuery##variables)
+      ])
+      |> Js.Json.object_
+      |> Js.Json.stringify
+      |> Fetch.BodyInit.make,
+    ~credentials=Include,
+    ~headers=
+      Fetch.HeadersInit.makeWithArray([|("content-type", "application/json")|]),
+    ()
+  )
+)
+|> Js.Promise.then_(Fetch.Response.json)
+|> Js.Promise.then_(data => 
+  switch (Js.Json.decodeObject(data)) {
+  | Some(obj) =>
+    Js.Dict.unsafeGet(obj, "data")
+    |> personQuery##parse
+    |> Js.Promise.resolve
+  | None => 
+    "Response is not an object"
+    |> Js.Exn.raiseError
+    |> Js.Promise.reject
+  }
+)
+|> Js.Promise.then_(res => 
+  /* res 的型別為
+    Js.t(
+      < Person : 
+        < gender : [ `HERMAPHRODITE | `MALE | `FEMALE | `UNKNOWN ] option;
+          height : int option;
+          id : string;
+          name : string;
+          skinColor : [ `MOTTLEDGREEN
+                        | `BROWNMOTTLE
+                        | `METAL
+                        | `BROWN
+                        | `FAIR
+                        | `TAN
+                        | `PALE
+                        | `ORANGE
+                        | `GREENTAN
+                        | `GREEN
+                        | `WHITE
+                        | `BLUE
+                        | `LIGHT
+                        | `SILVER
+                        | `GOLD
+                        | `YELLOW
+                        | `RED
+                        | `UNKNOWN
+                        | `DARK
+                        | `GREY ] Js.Array.t option >
+           Js.t option >
+    )
+  */
+  Js.log(res)
+);
+
+/* Console 輸出：
+  {"Person":{"name":"R2-D2","height":96,"skinColor":["WHITE","BLUE"],"id":"cj0nv9p9wewcm01302r07xzna","gender":"UNKNOWN"}}
 */
 ```
 
