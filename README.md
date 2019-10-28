@@ -11,3 +11,8 @@ cd reasonml-brief-intro-cht
 docsify serve docs
 # open http://localhost:3000
 ```
+
+## Stargazers over time
+
+[![Stargazers over time](https://starchart.cc/jihchi/reasonml-brief-intro-cht.svg)](https://starchart.cc/jihchi/reasonml-brief-intro-cht)
+
